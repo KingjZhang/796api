@@ -9,7 +9,7 @@ import hmac
 import hashlib
 import base64
 
-class API(object):
+class API796(object):
     def __init__(self, appid, key, secret):
         self.appid = appid
         self.key = key
@@ -17,16 +17,16 @@ class API(object):
         self.access_token = None
 
     def get_sig(self):
-        msg = 'apikey=%s&appid=%d&secretkey=%s&timestamp=%d' % ( \
-                urllib.quote_plus(self.key), self.appid, urllib.quote_plus(self.secret), int(time.time()))
-        return base64.b64encode(hmac.new(self.secret, msg, hashlib.sha1).hexdigest().lower())
+        msg = 'apikey=%s&appid=%s&secretkey=%s&timestamp=%d' % ( \
+                urllib.parse.quote_plus(self.key), self.appid, urllib.parse.quote_plus(self.secret), int(time.time()))
+        return base64.b64encode(bytes(hmac.new(bytes(self.secret,'utf-8'), msg.encode('utf-8'), hashlib.sha1).hexdigest().lower(),"utf-8"))
 
     def update_token(self):
         params = {'appid': self.appid, 'apikey': self.key, 'timestamp': int(time.time()), 'sig': self.get_sig()}
         r =requests.get('https://796.com/oauth/token', params=params)
         result = r.json()
         assert(int(result['errno']) == 0)
-        self.access_token = urllib.unquote(result['data']['access_token'])
+        self.access_token = urllib.parse.unquote(result['data']['access_token'])
         self.access_token_update_time = time.time()
         return self.access_token
 
@@ -108,4 +108,3 @@ class API(object):
 
     def ltc_cancel_all(self, bs):
         return self.call('ltcfutures', 'cancel_all', {'bs': bs})
-
